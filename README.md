@@ -104,6 +104,33 @@ All routes are mounted at root (no built-in `/api` prefix).
 
 If a client expects `/api/*`, use reverse proxy path rewrite, or configure client base URL accordingly.
 
+## Extracted Essentials From Global Docs
+
+### Teaching Session Flow
+
+1. create session with mode, strictness, participants
+2. send prompt to learner agent
+3. receive response and score it
+4. if score is below threshold, iterate correction loop
+5. on pass or max iterations, finalize and persist learning outcome in agent side memory
+
+### Group Chat Flow
+
+1. create group topic in a session
+2. send message with optional mentions
+3. route to target agents and broadcast updates
+4. agents pull message history when needed
+
+### Scoring Formula Reference
+
+Router-level evaluation convention:
+
+```text
+overall = (accuracy * 0.4) + (completeness * 0.3) + (clarity * 0.3)
+```
+
+At higher strictness levels, passing becomes harder through strictness curve adjustment.
+
 ## Anti-Hardcoding Checklist
 
 - Keep host and port configurable with env vars.
@@ -177,6 +204,31 @@ python run.py
 当前 Router 路由挂载在根路径（没有内建 `/api` 前缀）。
 
 如果客户端预期 `/api/*`，请使用反向代理重写（如 `/api/* -> /*`），或将客户端 base URL 指向兼容网关。
+
+### 从全局 docs 提炼的关键机制
+
+#### 教学会话流程
+
+1. 创建会话（mode、strictness、participants）
+2. 发送教学提示给学习者 Agent
+3. 接收回复并评分
+4. 低于阈值则进入纠正迭代
+5. 达标或达到最大迭代后结束，并由 Agent 侧持久化学习结果
+
+#### 群聊流程
+
+1. 在会话中创建群组主题
+2. 发送消息，可带 mentions
+3. Router 路由到目标 Agent 并广播更新
+4. Agent 需要时可主动拉取历史消息
+
+#### 评分公式参考
+
+```text
+overall = (accuracy * 0.4) + (completeness * 0.3) + (clarity * 0.3)
+```
+
+strictness 越高，通过难度越高。
 
 ### 防硬编码清单
 
