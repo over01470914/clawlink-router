@@ -25,6 +25,16 @@ class AgentRegistry:
         logger.info("Registered agent %s (%s)", agent.agent_id, agent.display_name)
         return True
 
+    def upsert(self, agent: AgentInfo) -> str:
+        """Insert or update an agent and return the action performed."""
+        if agent.agent_id in self._agents:
+            self._agents[agent.agent_id] = agent
+            logger.info("Updated agent %s (%s)", agent.agent_id, agent.display_name)
+            return "updated"
+        self._agents[agent.agent_id] = agent
+        logger.info("Registered agent %s (%s)", agent.agent_id, agent.display_name)
+        return "registered"
+
     def unregister(self, agent_id: str) -> bool:
         """Remove an agent from the registry. Returns True if it existed."""
         if agent_id not in self._agents:

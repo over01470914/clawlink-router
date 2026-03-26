@@ -61,7 +61,7 @@ python run.py
 ## Configuration
 
 | Environment Variable | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `CLAWLINK_ROUTER_HOST` | `0.0.0.0` | bind host |
 | `CLAWLINK_ROUTER_PORT` | `8420` | bind port |
 
@@ -70,11 +70,12 @@ python run.py
 All routes are mounted at root (no built-in `/api` prefix).
 
 | Method | Path | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | POST | `/connect` | validate connection |
 | POST | `/pair/generate` | generate pairing code |
 | POST | `/pair/validate` | validate pairing code |
 | POST | `/pair/complete` | complete pairing and register agent |
+| POST | `/agents/register` | direct agent registration compatibility endpoint |
 | GET | `/agents` | list agents |
 | GET | `/agents/{agent_id}` | get agent |
 | DELETE | `/agents/{agent_id}` | disconnect agent |
@@ -96,6 +97,8 @@ All routes are mounted at root (no built-in `/api` prefix).
 | GET | `/locks` | list locks |
 | GET | `/locks/{file_path}` | check lock |
 | DELETE | `/locks/{file_path}` | force release lock |
+| GET | `/status` | compatibility status summary |
+| GET | `/api/status` | legacy status alias |
 | GET | `/sessions/{session_id}/heartbeat` | heartbeat status |
 | GET | `/health` | health check |
 | GET | `/metrics` | aggregated metrics |
@@ -103,6 +106,8 @@ All routes are mounted at root (no built-in `/api` prefix).
 ## Integration Note For Clients Expecting `/api`
 
 If a client expects `/api/*`, use reverse proxy path rewrite, or configure client base URL accordingly.
+
+For local integration with `clawlink-agent`, the Router also accepts direct self-registration on `/agents/register`.
 
 ## Extracted Essentials From Global Docs
 
@@ -204,6 +209,12 @@ python run.py
 当前 Router 路由挂载在根路径（没有内建 `/api` 前缀）。
 
 如果客户端预期 `/api/*`，请使用反向代理重写（如 `/api/* -> /*`），或将客户端 base URL 指向兼容网关。
+
+为了兼容旧配置，Router 现在也提供：
+
+- `/status`
+- `/api/status`
+- `/agents/register`
 
 ### 从全局 docs 提炼的关键机制
 

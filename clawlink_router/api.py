@@ -126,6 +126,17 @@ class PairCompleteRequest(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class AgentRegisterRequest(BaseModel):
+    agent_id: str
+    display_name: str
+    endpoint: str
+    version: str = ""
+    pairing_code: str = ""
+    agent_type: str = "local"
+    avatar_color: str = "#5865F2"
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class CreateSessionRequest(BaseModel):
     chat_type: str = "solo"
     mode: str = "|"
@@ -261,6 +272,32 @@ async def disconnect_agent(agent_id: str) -> dict[str, Any]:
     if not removed:
         raise HTTPException(status_code=404, detail="Agent not found")
     return {"status": "disconnected", "agent_id": agent_id}
+
+
+@app.post("/agents/register")
+async def register_agent(req: AgentRegisterRequest) -> dict[str, Any]:
+    """Directly register or update an agent by endpoint.
+
+    This compatibility endpoint allows clawlink-agent instances to register
+    themselves without the pairing flow during local integration testing.
+    """
+    agent = AgentInfo(
+        agent_id=req.agent_id,
+        display_name=req.display_name,
+        agent_type=req.agent_type,
+        endpoint=req.endpoint,
+        avatar_color=req.avatar_color,
+        metadata={
+            **req.metadata,
+            "version": req.version,
+            "pairing_code": req.pairing_code,
+        },
+    )
+    action = agent_registry.upsert(agent)
+    return {
+        "status": action,
+        "agent": agent.model_dump(mode="json"),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -546,6 +583,27 @@ async def health() -> dict[str, Any]:
         "agents_connected": len(agent_registry),
         "sessions_active": len(session_manager.list_all()),
     }
+
+
+@app.get("/status")
+async def status() -> dict[str, Any]:
+    """Compatibility status endpoint for clients expecting router summary."""
+    sessions = session_manager.list_all()
+    active_locks = file_lock_manager.list_locks()
+    return {
+        "version": __version__,
+        "uptime": 0,
+        "agentCount": len(agent_registry),
+        "sessionCount": len(sessions),
+        "lockCount": len(active_locks),
+        "status": "healthy",
+    }
+
+
+@app.get("/api/status")
+async def api_status() -> dict[str, Any]:
+    """Alias for clients still configured with /api/status."""
+    return await status()
 
 
 @app.get("/metrics")
