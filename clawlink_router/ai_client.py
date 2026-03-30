@@ -22,6 +22,7 @@ class AIClient(abc.ABC):
         *,
         session_id: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
+        sender_id: Optional[str] = None,
     ) -> str:
         """Send a message to an agent and return its response text."""
         ...
@@ -61,14 +62,19 @@ class GenericAIClient(AIClient):
         *,
         session_id: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
+        sender_id: Optional[str] = None,
     ) -> str:
         """POST a message to the agent's ``/message`` endpoint."""
         url = endpoint.rstrip("/") + "/message"
         body: dict[str, Any] = {"content": message}
         if session_id:
             body["session_id"] = session_id
+        if sender_id:
+            body["sender_id"] = sender_id
         if metadata:
             body["metadata"] = metadata
+        else:
+            body["metadata"] = {}
 
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             try:
@@ -152,6 +158,7 @@ class MockAIClient(AIClient):
         *,
         session_id: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
+        sender_id: Optional[str] = None,
     ) -> str:
         self.sent_messages.append(
             {
@@ -159,6 +166,7 @@ class MockAIClient(AIClient):
                 "message": message,
                 "session_id": session_id,
                 "metadata": metadata,
+                "sender_id": sender_id,
             }
         )
         if self._response_queue:

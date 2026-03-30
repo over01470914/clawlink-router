@@ -44,6 +44,8 @@ class SessionStatus(str, Enum):
 class MessageType(str, Enum):
     """Classification of messages flowing through the router."""
     TEACHING = "teaching"
+    RESPONSE = "response"
+    SUMMARY = "summary"
     CHALLENGE = "challenge"
     FEEDBACK = "feedback"
     SELF_ASSESSMENT = "self_assessment"

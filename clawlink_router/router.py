@@ -143,15 +143,19 @@ class ConversationRouter:
             f"Strictness level: {session.strictness}/100."
         )
         teacher_msg = await self._client.send_message(
-            teacher.endpoint, teaching_prompt, session_id=sid
+            teacher.endpoint, teaching_prompt, session_id=sid,
+            sender_id="router",
+            metadata={"message_type": "teaching", "role": "teacher", "capture_memory": True},
         )
         self._record(sid, teacher.agent_id, student.agent_id, teacher_msg, MessageType.TEACHING)
 
         # Step 2 - Student processes and responds
         student_resp = await self._client.send_message(
-            student.endpoint, teacher_msg, session_id=sid
+            student.endpoint, teacher_msg, session_id=sid,
+            sender_id=teacher.agent_id,
+            metadata={"message_type": "teaching", "role": "student", "capture_memory": True},
         )
-        self._record(sid, student.agent_id, teacher.agent_id, student_resp, MessageType.TEACHING)
+        self._record(sid, student.agent_id, teacher.agent_id, student_resp, MessageType.RESPONSE)
 
         # Step 3 - Teacher sends a challenge
         challenge_prompt = (
@@ -159,15 +163,19 @@ class ConversationRouter:
             f"Student said: {student_resp[:500]}"
         )
         challenge_msg = await self._client.send_message(
-            teacher.endpoint, challenge_prompt, session_id=sid
+            teacher.endpoint, challenge_prompt, session_id=sid,
+            sender_id="router",
+            metadata={"message_type": "challenge", "role": "teacher", "capture_memory": True},
         )
         self._record(sid, teacher.agent_id, student.agent_id, challenge_msg, MessageType.CHALLENGE)
 
         # Step 4 - Student responds to challenge
         challenge_resp = await self._client.send_message(
-            student.endpoint, challenge_msg, session_id=sid
+            student.endpoint, challenge_msg, session_id=sid,
+            sender_id=teacher.agent_id,
+            metadata={"message_type": "challenge", "role": "student", "capture_memory": True},
         )
-        self._record(sid, student.agent_id, teacher.agent_id, challenge_resp, MessageType.CHALLENGE)
+        self._record(sid, student.agent_id, teacher.agent_id, challenge_resp, MessageType.RESPONSE)
 
         # Step 5 - Student self-assessment
         assess_prompt = (
@@ -175,7 +183,9 @@ class ConversationRouter:
             "Rate your confidence from 0.0 to 1.0 and explain your reasoning."
         )
         assess_resp = await self._client.send_message(
-            student.endpoint, assess_prompt, session_id=sid
+            student.endpoint, assess_prompt, session_id=sid,
+            sender_id="router",
+            metadata={"message_type": "self_assessment", "role": "student"},
         )
         self._record(
             sid, student.agent_id, teacher.agent_id, assess_resp, MessageType.SELF_ASSESSMENT
@@ -190,7 +200,9 @@ class ConversationRouter:
             f"Challenge response: {challenge_resp[:300]}"
         )
         feedback_resp = await self._client.send_message(
-            teacher.endpoint, feedback_prompt, session_id=sid
+            teacher.endpoint, feedback_prompt, session_id=sid,
+            sender_id="router",
+            metadata={"message_type": "feedback", "role": "teacher"},
         )
         self._record(sid, teacher.agent_id, student.agent_id, feedback_resp, MessageType.FEEDBACK)
         teacher_score = self._parse_teacher_score(feedback_resp)
